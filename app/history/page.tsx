@@ -47,7 +47,7 @@ export default function HistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useChineseFormat, setUseChineseFormat] = useState(true);
+  const useChineseFormat = true;
 
   // Load conversations on page load and when pagination changes
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function HistoryPage() {
       if (firstMessage.includes('code') || firstMessage.includes('program') || firstMessage.includes('javascript') || firstMessage.includes('typescript')) {
         return { icon: <Code size={18} />, bg: 'bg-blue-100', color: 'text-blue-600' };
       } else if (firstMessage.includes('image') || firstMessage.includes('picture') || firstMessage.includes('photo')) {
-        return { icon: <Image size={18} />, bg: 'bg-green-100', color: 'text-green-600' };
+        return { icon: <Image size={18} aria-hidden="true" />, bg: 'bg-green-100', color: 'text-green-600' };
       } else if (firstMessage.includes('music') || firstMessage.includes('audio') || firstMessage.includes('song')) {
         return { icon: <Music size={18} />, bg: 'bg-purple-100', color: 'text-purple-600' };
       } else if (firstMessage.includes('video') || firstMessage.includes('movie') || firstMessage.includes('film')) {
