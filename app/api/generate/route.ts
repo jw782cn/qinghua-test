@@ -7,10 +7,6 @@ import Conversation from '@/lib/models/conversation';
 const openai = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY || '',
-  defaultHeaders: {
-    'HTTP-Referer': process.env.SITE_URL || 'http://localhost:3000',
-    'X-Title': 'Manus AI Assistant',
-  },
 });
 
 export async function POST(req: NextRequest) {
@@ -20,6 +16,7 @@ export async function POST(req: NextRequest) {
     
     // Parse the request body
     const { messages } = await req.json();
+    console.log(messages);
     
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -30,7 +27,7 @@ export async function POST(req: NextRequest) {
     
     // Generate response using OpenRouter
     const completion = await openai.chat.completions.create({
-      model: 'openai/gpt-4o',
+      model: 'anthropic/claude-3.7-sonnet',
       messages: messages,
     });
     

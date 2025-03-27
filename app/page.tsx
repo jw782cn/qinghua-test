@@ -78,13 +78,25 @@ export default function Home() {
           <Button variant="ghost" className="text-sm font-medium rounded-t-lg px-4 py-2 text-gray-500">WTF</Button>
         </div>
 
-        {/* MongoDB Demo Link */}
-        <div className="mb-8 bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg shadow-sm">
-          <h3 className="text-xl font-bold text-blue-800 mb-2">MongoDB Demo</h3>
-          <p className="text-blue-700 mb-4">Check out our Todo app connected to MongoDB</p>
-          <Link href="/todos">
-            <Button className="bg-blue-600 hover:bg-blue-700">Open Todo App</Button>
-          </Link>
+        {/* Demo Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* MongoDB Demo Link */}
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-bold text-blue-800 mb-2">MongoDB Todo Demo</h3>
+            <p className="text-blue-700 mb-4">Check out our Todo app connected to MongoDB</p>
+            <Link href="/todos">
+              <Button className="bg-blue-600 hover:bg-blue-700">Open Todo App</Button>
+            </Link>
+          </div>
+          
+          {/* Chat Demo Link */}
+          <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-bold text-green-800 mb-2">AI Chat Demo</h3>
+            <p className="text-green-700 mb-4">Try our AI chat powered by OpenRouter</p>
+            <Link href="/chat">
+              <Button className="bg-green-600 hover:bg-green-700">Open Chat</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Cards Grid */}
