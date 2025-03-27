@@ -5,6 +5,19 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { fetchConversations } from "@/lib/utils";
 import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { 
+  MessageCircle, 
+  Brain, 
+  Code, 
+  Book, 
+  Image, 
+  Music, 
+  Video, 
+  FileText, 
+  Search,
+  HelpCircle
+} from "lucide-react";
 
 interface Conversation {
   _id: string;
@@ -34,6 +47,7 @@ export default function HistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [useChineseFormat, setUseChineseFormat] = useState(true);
 
   // Load conversations on page load and when pagination changes
   useEffect(() => {
@@ -57,7 +71,10 @@ export default function HistoryPage() {
   // Format the date to be more readable
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+      const date = new Date(dateString);
+      return useChineseFormat
+        ? format(date, 'yyyy年MM月dd日 HH:mm', { locale: zhCN })
+        : format(date, 'MMM d, yyyy h:mm a');
     } catch {
       return dateString;
     }
@@ -74,6 +91,35 @@ export default function HistoryPage() {
     return 'No messages';
   };
 
+  // Get the appropriate icon based on conversation content
+  const getIconComponent = (conversation: Conversation) => {
+    if (conversation.messages && conversation.messages.length > 0) {
+      const firstMessage = conversation.messages[0].content?.toLowerCase() || '';
+      
+      if (firstMessage.includes('code') || firstMessage.includes('program') || firstMessage.includes('javascript') || firstMessage.includes('typescript')) {
+        return { icon: <Code size={18} />, bg: 'bg-blue-100', color: 'text-blue-600' };
+      } else if (firstMessage.includes('image') || firstMessage.includes('picture') || firstMessage.includes('photo')) {
+        return { icon: <Image size={18} />, bg: 'bg-green-100', color: 'text-green-600' };
+      } else if (firstMessage.includes('music') || firstMessage.includes('audio') || firstMessage.includes('song')) {
+        return { icon: <Music size={18} />, bg: 'bg-purple-100', color: 'text-purple-600' };
+      } else if (firstMessage.includes('video') || firstMessage.includes('movie') || firstMessage.includes('film')) {
+        return { icon: <Video size={18} />, bg: 'bg-red-100', color: 'text-red-600' };
+      } else if (firstMessage.includes('book') || firstMessage.includes('read') || firstMessage.includes('article')) {
+        return { icon: <Book size={18} />, bg: 'bg-amber-100', color: 'text-amber-600' };
+      } else if (firstMessage.includes('search') || firstMessage.includes('find') || firstMessage.includes('look for')) {
+        return { icon: <Search size={18} />, bg: 'bg-indigo-100', color: 'text-indigo-600' };
+      } else if (firstMessage.includes('document') || firstMessage.includes('file') || firstMessage.includes('text')) {
+        return { icon: <FileText size={18} />, bg: 'bg-gray-100', color: 'text-gray-600' };
+      } else if (firstMessage.includes('ai') || firstMessage.includes('intelligence') || firstMessage.includes('neural')) {
+        return { icon: <Brain size={18} />, bg: 'bg-cyan-100', color: 'text-cyan-600' };
+      } else if (firstMessage.includes('help') || firstMessage.includes('assist') || firstMessage.includes('support')) {
+        return { icon: <HelpCircle size={18} />, bg: 'bg-emerald-100', color: 'text-emerald-600' };
+      }
+    }
+    // Default icon
+    return { icon: <MessageCircle size={18} />, bg: 'bg-gray-100', color: 'text-gray-600' };
+  };
+
   // Handle pagination
   const handlePrevPage = () => {
     if (pagination.page > 1) {
@@ -88,7 +134,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4">
+    <div className="min-h-screen bg-white p-4 max-w-4xl mx-auto">
       <header className="mb-8">
         <div className="flex justify-between items-center">
           <div>
@@ -123,15 +169,22 @@ export default function HistoryPage() {
                   className="block"
                 >
                   <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm text-gray-500">
-                        {formatDate(conversation.updatedAt)}
-                      </span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                        {conversation.messagesCount} messages
-                      </span>
+                    <div className="flex gap-3">
+                      <div className={`flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-md ${getIconComponent(conversation).bg} ${getIconComponent(conversation).color}`}>
+                        {getIconComponent(conversation).icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-sm text-gray-500">
+                            {formatDate(conversation.updatedAt)}
+                          </span>
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                            {conversation.messagesCount} messages
+                          </span>
+                        </div>
+                        <p className="text-gray-700">{getPreview(conversation)}</p>
+                      </div>
                     </div>
-                    <p className="text-gray-700">{getPreview(conversation)}</p>
                   </div>
                 </Link>
               ))}

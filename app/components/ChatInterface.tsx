@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { generateResponse, fetchConversation } from '@/lib/utils';
+import { generateStreamResponse, fetchConversation } from '@/lib/utils';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function ChatInterface() {
@@ -12,8 +12,16 @@ export default function ChatInterface() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  // State for streaming response
+  const [streamingContent, setStreamingContent] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingContent]);
 
   // Load conversation history on page load
   useEffect(() => {
@@ -70,21 +78,42 @@ export default function ChatInterface() {
     setIsLoading(true);
     
     try {
-      // Call the API to generate a response
-      const allMessages = [...messages, userMessage];
-      const response = await generateResponse(allMessages, conversationId);
+      // Reset streaming content
+      setStreamingContent('');
       
-      // Add the assistant's response to the UI
-      setMessages((prev) => [
-        ...prev, 
-        { role: 'assistant', content: response.message.content || '' }
-      ]);
+      // Prepare all messages for API
+      const allMessages = [...messages, userMessage];
+      
+      // Stream response handler
+      const handleStreamChunk = (chunk: { content: string; conversationId: string }) => {
+        if (chunk.content) {
+          setStreamingContent((prev) => prev + chunk.content);
+        }
+      };
+      
+      // Call the streaming API
+      const result = await generateStreamResponse(
+        allMessages, 
+        handleStreamChunk, 
+        conversationId
+      );
+      
+      // After stream completes, add the full assistant response to the messages
+      if (streamingContent) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: streamingContent }
+        ]);
+        
+        // Clear streaming content once it's added to messages
+        setStreamingContent('');
+      }
       
       // Save the conversation ID for future messages
-      if (response.conversationId) {
-        setConversationId(response.conversationId);
+      if (result.conversationId) {
+        setConversationId(result.conversationId);
         // Save to localStorage for persistence across refreshes
-        localStorage.setItem('conversationId', response.conversationId);
+        localStorage.setItem('conversationId', result.conversationId);
       }
     } catch (error) {
       console.error('Error generating response:', error);
@@ -93,6 +122,8 @@ export default function ChatInterface() {
         ...prev, 
         { role: 'assistant', content: 'Sorry, I encountered an error processing your request.' }
       ]);
+      // Clear any partial streaming content
+      setStreamingContent('');
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +134,7 @@ export default function ChatInterface() {
     // Clear messages and conversation ID
     setMessages([]);
     setConversationId(undefined);
+    setStreamingContent('');
     
     // Clear localStorage
     localStorage.removeItem('conversationId');
@@ -131,28 +163,42 @@ export default function ChatInterface() {
           <div className="flex items-center justify-center h-full text-gray-400">
             Loading conversation...
           </div>
-        ) : messages.length === 0 ? (
+        ) : messages.length === 0 && !streamingContent ? (
           <div className="flex items-center justify-center h-full text-gray-400">
             Start a conversation by sending a message
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div 
-              key={index}
-              className={`p-3 rounded-lg max-w-[80%] ${
-                message.role === 'user' 
-                  ? 'bg-blue-100 ml-auto' 
-                  : 'bg-gray-100'
-              }`}
-            >
-              {message.content}
-            </div>
-          ))
-        )}
-        {isLoading && (
-          <div className="p-3 rounded-lg bg-gray-100 max-w-[80%] animate-pulse">
-            Thinking...
-          </div>
+          <>
+            {messages.map((message, index) => (
+              <div 
+                key={index}
+                className={`p-3 rounded-lg max-w-[80%] ${
+                  message.role === 'user' 
+                    ? 'bg-blue-100 ml-auto' 
+                    : 'bg-gray-100'
+                }`}
+              >
+                {message.content}
+              </div>
+            ))}
+            
+            {/* Show streaming content as it comes in */}
+            {streamingContent && (
+              <div className="p-3 rounded-lg bg-gray-100 max-w-[80%]">
+                {streamingContent}
+              </div>
+            )}
+            
+            {/* Loading indicator only shown when there's no streaming content yet */}
+            {isLoading && !streamingContent && (
+              <div className="p-3 rounded-lg bg-gray-100 max-w-[80%] animate-pulse">
+                Thinking...
+              </div>
+            )}
+            
+            {/* Invisible div for scrolling to bottom */}
+            <div ref={messagesEndRef} />
+          </>
         )}
       </div>
       

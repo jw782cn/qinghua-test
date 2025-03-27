@@ -12,3 +12,7 @@ use shadcn components
 mongodb is located in lib/db.ts, use connectToDatabase to connect to the database
 
 use openrouter to call openai api
+
+use lucide-react for icons
+
+don't start npm run dev, it's already running
