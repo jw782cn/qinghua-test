@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     
     // Parse the request body
     const { messages } = await req.json();
-    console.log(messages);
     
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -46,7 +45,7 @@ export async function POST(req: NextRequest) {
     // If no conversation found or no ID provided, create a new one
     if (!conversation) {
       conversation = new Conversation({
-        messages: messages.map((msg: any) => ({
+        messages: messages.map((msg: { role: string; content: string }) => ({
           role: msg.role,
           content: msg.content,
           timestamp: new Date(),
@@ -70,10 +69,11 @@ export async function POST(req: NextRequest) {
       conversationId: conversation._id,
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating response:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate response';
     return NextResponse.json(
-      { error: error.message || 'Failed to generate response' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

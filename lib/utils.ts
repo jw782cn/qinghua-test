@@ -23,3 +23,27 @@ export async function generateResponse(messages: { role: string; content: string
 
   return response.json();
 }
+
+export async function fetchConversation(conversationId: string) {
+  console.log('Fetching conversation history...');
+  const response = await fetch(`/api/conversation?id=${conversationId}`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch conversation');
+  }
+
+  return response.json();
+}
+
+export async function fetchConversations(page = 1, limit = 10) {
+  console.log('Fetching conversations list...');
+  const response = await fetch(`/api/conversations?page=${page}&limit=${limit}`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch conversations list');
+  }
+
+  return response.json();
+}

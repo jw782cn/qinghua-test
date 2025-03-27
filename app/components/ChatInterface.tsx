@@ -1,15 +1,60 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { generateResponse } from '@/lib/utils';
+import { generateResponse, fetchConversation } from '@/lib/utils';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function ChatInterface() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Load conversation history on page load
+  useEffect(() => {
+    const loadConversation = async () => {
+      // Check URL for conversation ID
+      const urlConversationId = searchParams.get('id');
+      
+      // Check localStorage for conversation ID if not in URL
+      const storedConversationId = localStorage.getItem('conversationId');
+      
+      // Use URL param first, then localStorage
+      const convId = urlConversationId || storedConversationId || undefined;
+      
+      if (convId) {
+        try {
+          setIsInitialLoading(true);
+          const conversation = await fetchConversation(convId);
+          
+          if (conversation && conversation.messages) {
+            setMessages(conversation.messages);
+            setConversationId(conversation.conversationId);
+            
+            // Save conversation ID to localStorage
+            localStorage.setItem('conversationId', conversation.conversationId);
+          }
+        } catch (error) {
+          console.error('Failed to load conversation:', error);
+          // If the conversation is not found, clear localStorage
+          if (storedConversationId) {
+            localStorage.removeItem('conversationId');
+          }
+        } finally {
+          setIsInitialLoading(false);
+        }
+      } else {
+        setIsInitialLoading(false);
+      }
+    };
+
+    loadConversation();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +83,8 @@ export default function ChatInterface() {
       // Save the conversation ID for future messages
       if (response.conversationId) {
         setConversationId(response.conversationId);
+        // Save to localStorage for persistence across refreshes
+        localStorage.setItem('conversationId', response.conversationId);
       }
     } catch (error) {
       console.error('Error generating response:', error);
@@ -51,10 +98,40 @@ export default function ChatInterface() {
     }
   };
 
+  // Start a new conversation
+  const handleNewChat = () => {
+    // Clear messages and conversation ID
+    setMessages([]);
+    setConversationId(undefined);
+    
+    // Clear localStorage
+    localStorage.removeItem('conversationId');
+    
+    // Redirect to chat page without ID parameter
+    router.push('/chat');
+  };
+
   return (
     <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
+      {conversationId && (
+        <div className="p-2 border-b flex justify-end">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs" 
+            onClick={handleNewChat}
+          >
+            Start New Chat
+          </Button>
+        </div>
+      )}
+      
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
-        {messages.length === 0 ? (
+        {isInitialLoading ? (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Loading conversation...
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
             Start a conversation by sending a message
           </div>
@@ -85,9 +162,9 @@ export default function ChatInterface() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
           className="flex-1"
-          disabled={isLoading}
+          disabled={isLoading || isInitialLoading}
         />
-        <Button type="submit" disabled={isLoading || !input.trim()}>
+        <Button type="submit" disabled={isLoading || isInitialLoading || !input.trim()}>
           {isLoading ? "Sending..." : "Send"}
         </Button>
       </form>

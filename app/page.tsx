@@ -79,8 +79,8 @@ export default function Home() {
         </div>
 
         {/* Demo Links */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* MongoDB Demo Link */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* MongoDB Todo Demo */}
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-bold text-blue-800 mb-2">MongoDB Todo Demo</h3>
             <p className="text-blue-700 mb-4">Check out our Todo app connected to MongoDB</p>
@@ -95,6 +95,15 @@ export default function Home() {
             <p className="text-green-700 mb-4">Try our AI chat powered by OpenRouter</p>
             <Link href="/chat">
               <Button className="bg-green-600 hover:bg-green-700">Open Chat</Button>
+            </Link>
+          </div>
+          
+          {/* History Demo Link */}
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-bold text-purple-800 mb-2">Chat History</h3>
+            <p className="text-purple-700 mb-4">Browse your past conversations</p>
+            <Link href="/history">
+              <Button className="bg-purple-600 hover:bg-purple-700">View History</Button>
             </Link>
           </div>
         </div>

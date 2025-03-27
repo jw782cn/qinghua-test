@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // Local type declaration for global MongoDB connection
 declare global {
+  // eslint-disable-next-line no-var
   var mongoose: {
     conn: mongoose.Connection | null;
     promise: Promise<mongoose.Connection> | null;

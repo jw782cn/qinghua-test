@@ -4,7 +4,7 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Trash2, Edit, RefreshCw } from 'lucide-react';
+import { Check, Trash2, RefreshCw } from 'lucide-react';
 
 interface Todo {
   _id: string;
